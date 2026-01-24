@@ -40,6 +40,7 @@ public class DatabaseSecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/welcome/**").permitAll()
                         .requestMatchers("/auth/getUser").hasAuthority("ROLE_"+ USERS_ROLE.USER)
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated()

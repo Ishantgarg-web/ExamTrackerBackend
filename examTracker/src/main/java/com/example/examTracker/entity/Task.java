@@ -1,6 +1,9 @@
 package com.example.examTracker.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 /**
  * Represents a daily task associated with a specific exam.
@@ -8,9 +11,11 @@ import jakarta.persistence.*;
  * Tasks are reusable across users and tracked per user via UserTaskProgress.
  */
 
-
+@Builder
 @Entity
 @Table(name = "tasks")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Task {
 
     @Id
@@ -27,6 +32,7 @@ public class Task {
     @Column(nullable = false)
     private int dailyTarget; // 20
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 }

@@ -15,6 +15,10 @@ import java.time.Instant;
 @Builder
 @Entity
 @Table(name = "exams")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Exam {
 
     @Id

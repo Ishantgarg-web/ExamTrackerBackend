@@ -2,6 +2,7 @@ package com.example.examTracker.entity;
 
 import com.example.examTracker.enums.ATTEMPT_TYPE;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -20,6 +21,11 @@ import java.time.LocalDate;
                 @UniqueConstraint(columnNames = {"user_id", "exam_id"})
         }
 )
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserExamStats {
 
     @Id

@@ -41,11 +41,13 @@ public class DatabaseSecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/welcome/**").permitAll()
+                        .requestMatchers("/api/**").hasAuthority("ROLE_"+ USERS_ROLE.USER)
                         .requestMatchers("/auth/getUser").hasAuthority("ROLE_"+ USERS_ROLE.USER)
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_"+USERS_ROLE.ADMIN)
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider())
+//                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class

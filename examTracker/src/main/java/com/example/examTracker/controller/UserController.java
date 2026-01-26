@@ -1,21 +1,14 @@
 package com.example.examTracker.controller;
 
 
-import com.example.examTracker.dto.ExamRequestDto;
-import com.example.examTracker.dto.UserExamResponseDTO;
-import com.example.examTracker.dto.UserProfileRequestDTO;
-import com.example.examTracker.dto.UserProfileResponseDTO;
-import com.example.examTracker.entity.AppUser;
-import com.example.examTracker.entity.Exam;
-import com.example.examTracker.entity.UserExamStats;
+import com.example.examTracker.dto.*;
+import com.example.examTracker.entity.*;
 import com.example.examTracker.exceptions.ConflictException;
+import com.example.examTracker.exceptions.TaskProgressAlreadyPresent;
 import com.example.examTracker.exceptions.UserAlreadySubscribeOneExam;
 import com.example.examTracker.exceptions.WrongExamCodeException;
 import com.example.examTracker.repository.ExamRepository;
-import com.example.examTracker.service.ExamService;
-import com.example.examTracker.service.JwtUtil;
-import com.example.examTracker.service.UserExamStatsService;
-import com.example.examTracker.service.UserService;
+import com.example.examTracker.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.coyote.BadRequestException;
@@ -27,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +40,10 @@ public class UserController {
     ExamService examService;
 
     @Autowired
-    ExamRepository examRepository;
+    TaskService taskService;
+
+    @Autowired
+    UserTaskProgressService userTaskProgressService;
 
     /**
      *Purpose
@@ -172,4 +169,50 @@ public class UserController {
         return ResponseEntity.ok("Exam added successfully");
     }
 
+
+    /**
+     * Purpose
+     * User record task progress
+     * User can do the task for previous days
+     * User can only mark Complete for a task in a day, once mark complete it will not change.
+     * When user mark done for a task:
+     *
+     * Backend:
+     * update user currentStreak → if all the task for that exam are done, and all are done today only.
+     * update user LongestStreak → max(longestStreak, currentStreak)
+     * update currentStreak to 0, if user for a day not able to complete all tasks.
+     * @param createTaskProgressDTO
+     * @param authentication
+     * @return
+     */
+    @PostMapping("/me/taskProgress")
+    public ResponseEntity<?> createTaskProgress(@RequestBody CreateTaskProgressDTO createTaskProgressDTO,
+                                                Authentication authentication) {
+        String email = authentication.getName();
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        AppUser appUser = userService.getUserByEmail(email);
+        // validate {userId, taskId, completed_at} should be unique
+        UserTaskProgress userTaskProgressExist = userTaskProgressService.findByUserIdTaskIdCompletedAt(appUser.getId(),
+                createTaskProgressDTO.getTaskId(),
+                LocalDate.now());
+        if(userTaskProgressExist != null) {
+            throw new TaskProgressAlreadyPresent("Task is already present");
+        }
+        // create task progress record
+        try {
+            UserTaskProgress userTaskProgress = UserTaskProgress.builder()
+                    .user(appUser)
+                    .task(taskService.findById(createTaskProgressDTO.getTaskId()))
+                    .completed(true)
+                    .completedAt(LocalDate.now())
+                    .build();
+            userTaskProgressService.save(userTaskProgress);
+            taskService.updateStreakLogic(createTaskProgressDTO.getTaskId(), appUser.getId());
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
 }

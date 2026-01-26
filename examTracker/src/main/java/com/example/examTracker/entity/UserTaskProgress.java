@@ -1,6 +1,10 @@
 package com.example.examTracker.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,13 +17,11 @@ import java.time.LocalDate;
 
 @Entity
 @Table(
-        name = "user_task_progress",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        columnNames = {"user_id", "task_id", "progress_date"}
-                )
-        }
+        name = "user_task_progress"
 )
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserTaskProgress {
 
     @Id
@@ -34,12 +36,9 @@ public class UserTaskProgress {
 
     // Stored in UTC
     @Column(nullable = false)
-    private Instant completedAt;
+    private LocalDate completedAt;
 
-    // Derived from completedAt + user timezone
     @Column(nullable = false)
-    private LocalDate progressDate;
-
     private boolean completed;
 }
 

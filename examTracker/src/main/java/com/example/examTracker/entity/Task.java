@@ -3,6 +3,7 @@ package com.example.examTracker.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Table(name = "tasks")
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Task {

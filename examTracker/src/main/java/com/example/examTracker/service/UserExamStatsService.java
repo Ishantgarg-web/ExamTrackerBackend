@@ -31,4 +31,20 @@ public class UserExamStatsService {
     public UserExamStats existsByUser(String id) {
         return userExamStatsRepository.findByUserId(id);
     }
+
+    public Integer getCurrentStreakForUser(String userId, String examId) {
+        return userExamStatsRepository.getCurrentStreakForUser(userId, examId);
+    }
+
+    public void updateCurrentStreak(String userId, String examId, int newCurrentStreak) {
+        userExamStatsRepository.updateCurrentStreak(userId, examId, newCurrentStreak);
+    }
+
+    public void updateLongestStreak(String userId, String examId, int newLongestStreak) {
+        userExamStatsRepository.updateLongestStreak(userId, examId, newLongestStreak);
+    }
+
+    public Integer getLongestStreakForUser(String userId, String examId) {
+        return userExamStatsRepository.getLongestStreakForUser(userId, examId);
+    }
 }

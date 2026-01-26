@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -78,6 +79,43 @@ public class TaskService {
         }
     }
 
+    /**
+     * Purpose: To get updated current streak and longest streak for the user.
+     * This method will be used by getProfile API.
+     *
+     * Logic:
+     * previousDayTasksNotCompleted:
+     * 	TodayAllTasksCompleted: updated CS = 1, LS = max(stored_LS, 1)
+     * 	TodayAllTasksNotCompleted: updated CS = 0, LS = stored_LS
+     * previousDayTasksCompleted:
+     * 	CS = getCS
+     * 	LS = getLS
+     * @param userId
+     */
+    public ArrayList<Integer> getUpdateStreak(String userId) {
+        // Get examId from userId
+        String examId = userExamStatsService.getUserExamStats(userId).getExam().getExamId();
+        // Get all tasks for the examId
+        List<Task> allTasks = taskRepository.findAllTasksByExamId(examId);
+        ArrayList<Integer> resList = new ArrayList<>();
+        if(isCompletedAllTasks(userId, allTasks, LocalDate.now().minusDays(1))) {
+            resList.add(userExamStatsService.getCurrentStreakForUser(userId, examId));
+            resList.add(userExamStatsService.getLongestStreakForUser(userId, examId));
+        } else {
+            if(isCompletedAllTasks(userId, allTasks, LocalDate.now())) {
+                userExamStatsService.updateCurrentStreak(userId, examId,  1);
+                userExamStatsService.updateLongestStreak(userId, examId,
+                        (int)Math.max(userExamStatsService.getLongestStreakForUser(userId, examId), 1));
+            } else {
+                userExamStatsService.updateCurrentStreak(userId, examId,  0);
+                // Longest streak no need to update
+            }
+            resList.add(userExamStatsService.getCurrentStreakForUser(userId, examId));
+            resList.add(userExamStatsService.getLongestStreakForUser(userId, examId));
+        }
+        return resList;
+    }
+
     private boolean isCompletedAllTasks(String userId, List<Task> allTasks, LocalDate date) {
         for (Task task: allTasks) {
             // if that task is not present in user_task_progress table, there will be no Streak Logic update.
@@ -90,5 +128,11 @@ public class TaskService {
             }
         }
         return true;
+    }
+
+    public boolean isDayCompleted(String userId, String examId) {
+        // Get all tasks for the examId
+        List<Task> allTasks = taskRepository.findAllTasksByExamId(examId);
+        return isCompletedAllTasks(userId, allTasks, LocalDate.now());
     }
 }

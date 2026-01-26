@@ -1,5 +1,6 @@
 package com.example.examTracker.service;
 
+import com.example.examTracker.dto.CreateTaskProgressResponseDTO;
 import com.example.examTracker.entity.AppUser;
 import com.example.examTracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,12 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    UserExamStatsService userExamStatsService;
+
+    @Autowired
+    TaskService taskService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -36,4 +43,15 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
+    public CreateTaskProgressResponseDTO prepareResponseForCreateTaskProgress(String userId, String taskId) {
+        // Get examId from userId
+        String examId = userExamStatsService.getUserExamStats(userId).getExam().getExamId();
+        return CreateTaskProgressResponseDTO.builder()
+                .taskId(taskId)
+                .completedStatus(true)
+                .currentStreak(userExamStatsService.getCurrentStreakForUser(userId, examId))
+                .longestStreak(userExamStatsService.getLongestStreakForUser(userId, examId))
+                .dayCompleted(taskService.isDayCompleted(userId, examId))
+                .build();
+    }
 }

@@ -65,13 +65,14 @@ public class UserController {
         List<UserExamResponseDTO> userExamResponseDTOList = new ArrayList<>();
         UserExamStats userExamStats = userExamStatsService.getUserExamStats(appUser.getId());
         Exam exam = examService.getExamByExamId(userExamStats.getExam().getExamId());
-        taskService.updateStreakLogic(appUser.getId());
+        ArrayList<Integer> currentStreakList = taskService.getUpdateStreak(appUser.getId());
+        // first: currentStreak, second: updatedStreak
         UserExamResponseDTO userExamResponseDTO = UserExamResponseDTO.builder()
                 .examId(exam.getExamId())
                 .examCode(exam.getExamCode())
                 .attemptType(userExamStats.getAttemptType())
-                .currentStreak(userExamStats.getCurrentStreak())
-                .longestStreak(userExamStats.getLongestStreak())
+                .currentStreak(currentStreakList.get(0))
+                .longestStreak(currentStreakList.get(1))
                 .build();
         userExamResponseDTOList.add(userExamResponseDTO);
 
@@ -174,7 +175,6 @@ public class UserController {
     /**
      * Purpose
      * User record task progress
-     * User can do the task for previous days
      * User can only mark Complete for a task in a day, once mark complete it will not change.
      * When user mark done for a task:
      *
@@ -187,7 +187,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/me/taskProgress")
-    public ResponseEntity<?> createTaskProgress(@RequestBody CreateTaskProgressDTO createTaskProgressDTO,
+    public ResponseEntity<CreateTaskProgressResponseDTO> createTaskProgress(@RequestBody CreateTaskProgressDTO createTaskProgressDTO,
                                                 Authentication authentication) {
         String email = authentication.getName();
         if (email == null) {
@@ -211,7 +211,9 @@ public class UserController {
                     .build();
             userTaskProgressService.save(userTaskProgress);
             taskService.updateStreakLogic(appUser.getId());
-            return ResponseEntity.status(HttpStatus.OK).build();
+            CreateTaskProgressResponseDTO createTaskProgressResponseDTO =
+                    userService.prepareResponseForCreateTaskProgress(appUser.getId(), createTaskProgressDTO.getTaskId());
+            return ResponseEntity.ok(createTaskProgressResponseDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }

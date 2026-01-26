@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class UserService implements UserDetailsService {
 
@@ -51,7 +53,7 @@ public class UserService implements UserDetailsService {
                 .completedStatus(true)
                 .currentStreak(userExamStatsService.getCurrentStreakForUser(userId, examId))
                 .longestStreak(userExamStatsService.getLongestStreakForUser(userId, examId))
-                .dayCompleted(taskService.isDayCompleted(userId, examId))
+                .dayCompleted(taskService.isDayCompleted(userId, LocalDate.now()))
                 .build();
     }
 }

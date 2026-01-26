@@ -130,9 +130,19 @@ public class TaskService {
         return true;
     }
 
-    public boolean isDayCompleted(String userId, String examId) {
+    public boolean isDayCompleted(String userId, LocalDate date) {
+        // Get examId from userId
+        String examId = userExamStatsService.getUserExamStats(userId).getExam().getExamId();
         // Get all tasks for the examId
         List<Task> allTasks = taskRepository.findAllTasksByExamId(examId);
-        return isCompletedAllTasks(userId, allTasks, LocalDate.now());
+        return isCompletedAllTasks(userId, allTasks, date);
+    }
+
+    public boolean isTaskCompleteForDate(String userId, String taskId, LocalDate date) {
+        UserTaskProgress userTaskProgress = userTaskProgressService.findByUserIdTaskIdCompletedAt(userId, taskId, date);
+        if(userTaskProgress == null) {
+            return false;
+        }
+        return true;
     }
 }

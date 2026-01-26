@@ -22,6 +22,9 @@ public class TaskService {
     @Autowired
     UserExamStatsService userExamStatsService;
 
+    @Autowired
+    ExamService examService;
+
     public void saveTask(Task task) {
         taskRepository.save(task);
     }
@@ -36,39 +39,41 @@ public class TaskService {
 
     /**
      * update User streak if applicable for that exam.
-     * First, Get all tasks for the subscribed exam
-     *  find examId by taskId -> Get from tasks table
-     *  Get all tasks for the given examId -> Get from tasks table
-     * Second, check if all tasks are completed for today's date -> from UserTaskProgress table
-     * third, if yes -> update currentStreak, and longestStreak(if applicable)
-     * else, update currentStreak = 1 and longestStreak(if applicable)
+     * Streak Logic:
+     * previousDayTasksNotCompleted:
+     * 	TodayAllTasksCompleted: updated CS = 1, LS = max(stored_LS, 1)
+     * 	TodayAllTasksNotCompleted: updated CS = 0, LS = stored_LS
+     * previousDayTasksCompleted:
+     * 	TodayAllTasksCompleted:	updated CS = Stored_CS + 1, LS = max(stored_LS, updated_CS)
+     * 	TodayAllTasksNotCompleted: updated CS = Stored_CS, LS = stored_LS
      */
-    public void updateStreakLogic(String taskId, String userId) {
-        // find examId by taskId -> Get from tasks table
-        String examId = taskRepository.findExamIdByTaskId(taskId);
-        // Get all tasks for the given examId -> Get from tasks table
+    public void updateStreakLogic(String userId) {
+        // Get examId from userId
+        String examId = userExamStatsService.getUserExamStats(userId).getExam().getExamId();
+        // Get all tasks for the examId
         List<Task> allTasks = taskRepository.findAllTasksByExamId(examId);
-        // check if all tasks are completed for today's date
-        boolean completedAllTasksForToday = isCompletedAllTasks(userId, allTasks, LocalDate.now());
-        if(completedAllTasksForToday) {
-            // then check if yesterday completed all tasks
-            if(isCompletedAllTasks(userId, allTasks, LocalDate.now().minusDays(1))) {
-                // update currentStreak = currentStreak + 1 in UserExamStats Table
+
+        if(isCompletedAllTasks(userId, allTasks, LocalDate.now().minusDays(1))) {
+            if(isCompletedAllTasks(userId, allTasks, LocalDate.now())) {
+                // updated CS = Stored_CS + 1, LS = max(stored_LS, updated_CS)
                 Integer currentStreak = userExamStatsService.getCurrentStreakForUser(userId, examId);
                 userExamStatsService.updateCurrentStreak(userId, examId, currentStreak + 1);
+                Integer longestStreak = userExamStatsService.getLongestStreakForUser(userId, examId);
                 userExamStatsService.updateLongestStreak(userId, examId,
-                        (int)Math.max(
-                                userExamStatsService.getLongestStreakForUser(userId, examId),
-                                currentStreak + 1
-                        ));
+                        (int)Math.max(longestStreak, currentStreak + 1));
             } else {
-                // previous day tasks were not completed.
+                // No need to update anything
+            }
+        } else {
+            if(isCompletedAllTasks(userId, allTasks, LocalDate.now())) {
+                // updated CS = 1, LS = max(stored_LS, 1)
                 userExamStatsService.updateCurrentStreak(userId, examId, 1);
                 userExamStatsService.updateLongestStreak(userId, examId,
-                        (int)Math.max(
-                                userExamStatsService.getLongestStreakForUser(userId, examId),
-                                1
-                        ));
+                        (int)Math.max(userExamStatsService.getLongestStreakForUser(userId, examId), 1));
+            } else {
+                // updated CS = 0, LS = stored_LS
+                userExamStatsService.updateCurrentStreak(userId, examId, 0);
+                // longest streak no need to update.
             }
         }
     }

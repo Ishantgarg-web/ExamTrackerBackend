@@ -65,6 +65,7 @@ public class UserController {
         List<UserExamResponseDTO> userExamResponseDTOList = new ArrayList<>();
         UserExamStats userExamStats = userExamStatsService.getUserExamStats(appUser.getId());
         Exam exam = examService.getExamByExamId(userExamStats.getExam().getExamId());
+        taskService.updateStreakLogic(appUser.getId());
         UserExamResponseDTO userExamResponseDTO = UserExamResponseDTO.builder()
                 .examId(exam.getExamId())
                 .examCode(exam.getExamCode())
@@ -209,7 +210,7 @@ public class UserController {
                     .completedAt(LocalDate.now())
                     .build();
             userTaskProgressService.save(userTaskProgress);
-            taskService.updateStreakLogic(createTaskProgressDTO.getTaskId(), appUser.getId());
+            taskService.updateStreakLogic(appUser.getId());
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

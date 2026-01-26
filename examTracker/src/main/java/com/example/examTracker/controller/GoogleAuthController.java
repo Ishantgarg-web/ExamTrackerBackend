@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.UUID;
@@ -103,6 +104,7 @@ public class GoogleAuthController {
                         .secure(true)
                         .path("/")
                         .sameSite("None")
+                        .maxAge(Duration.ofDays(300))
                         .build();
 
                 httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

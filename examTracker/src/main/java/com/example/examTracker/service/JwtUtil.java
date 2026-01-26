@@ -21,7 +21,7 @@ public class JwtUtil {
     private String secret;
 
     // 30 minutes (access token)
-    private static final long EXPIRATION_TIME = 300 * 60 * 1000;
+    private static final long EXPIRATION_TIME = 300 * 24 * 60 * 60 * 1000;
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(

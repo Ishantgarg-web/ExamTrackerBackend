@@ -59,7 +59,7 @@ public class GoogleAuthController {
             params.add("code", code);
             params.add("client_id", client_id);
             params.add("client_secret", client_secret);
-            params.add("redirect_uri", "https://developers.google.com/oauthplayground");
+            params.add("redirect_uri", "http://localhost:8000/auth/google/callback");
             params.add("grant_type", "authorization_code");
 
             HttpHeaders headers = new HttpHeaders();
@@ -99,17 +99,20 @@ public class GoogleAuthController {
 
                 String jwt = jwtUtil.generateToken(userDetails);
 
+                boolean isProd = false; // or read from profile/env
+
                 ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                         .httpOnly(true)
-                        .secure(true)
+                        .secure(isProd)                 // ❗ false on localhost
+                        .sameSite(isProd ? "None" : "Lax")
                         .path("/")
-                        .sameSite("None")
                         .maxAge(Duration.ofDays(300))
                         .build();
 
                 httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-                return ResponseEntity.ok("Login successful for user "+ email);
+                httpResponse.sendRedirect("http://localhost:3000/onboarding");
+                return null;
+//                return ResponseEntity.ok("Login successful for user "+ email);
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {

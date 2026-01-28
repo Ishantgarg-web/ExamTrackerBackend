@@ -2,12 +2,10 @@ package com.example.examTracker.service;
 
 import com.example.examTracker.entity.Exam;
 import com.example.examTracker.enums.EXAM_CODE;
+import com.example.examTracker.exceptions.ExamNotFoundException;
 import com.example.examTracker.repository.ExamRepository;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class ExamService {
@@ -17,12 +15,12 @@ public class ExamService {
 
     public Exam getExamByExamId(String examId) {
         return examRepository.findById(examId)
-                .orElseThrow(() -> new RuntimeException("Exam not found"));
+                .orElseThrow(() -> new ExamNotFoundException("Exam not found with id: " + examId));
     }
 
     public Exam getExamByExamCode(EXAM_CODE examCode) {
         return examRepository.findByexamCode(examCode)
-                .orElseThrow(() -> new RuntimeException("Exam Code Not found"));
+                .orElseThrow(() -> new ExamNotFoundException("Exam not found with code: " + examCode));
     }
 
     public void saveExam(Exam exam) {
@@ -32,5 +30,9 @@ public class ExamService {
     public Exam findByExamCodeAndIsExamActiveTrue(EXAM_CODE examCode) {
         return examRepository
                 .findByExamCodeAndIsExamActiveTrue(examCode.toString());
+    }
+
+    public boolean existsByExamCode(EXAM_CODE examCode) {
+        return examRepository.findByexamCode(examCode).isPresent();
     }
 }

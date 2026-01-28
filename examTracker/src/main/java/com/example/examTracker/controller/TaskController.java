@@ -38,12 +38,8 @@ public class TaskController {
                 .taskTitle(createTaskDTO.getTaskTitle())
                 .exam(exam)
                 .build();
-        try {
-            taskService.saveTask(task);
-            return ResponseEntity.ok("Task created successfuly for exam code: "+exam.getExamCode());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        taskService.saveTask(task);
+        return ResponseEntity.ok("Task created successfuly for exam code: "+exam.getExamCode());
     }
 
 }

@@ -3,15 +3,17 @@ package com.example.examTracker.controller;
 
 import com.example.examTracker.dto.*;
 import com.example.examTracker.entity.*;
-import com.example.examTracker.exceptions.ConflictException;
-import com.example.examTracker.exceptions.TaskProgressAlreadyPresent;
-import com.example.examTracker.exceptions.UserAlreadySubscribeOneExam;
-import com.example.examTracker.exceptions.WrongExamCodeException;
+import com.example.examTracker.enums.BACHELOR_DEGREE;
+import com.example.examTracker.enums.WORKING_STATUS;
+import com.example.examTracker.exceptions.*;
+import com.example.examTracker.exceptions.UserProfileExceptions.BachelorDegreeException;
+import com.example.examTracker.exceptions.UserProfileExceptions.WorkingStatusException;
 import com.example.examTracker.repository.ExamRepository;
 import com.example.examTracker.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.coyote.BadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -45,6 +47,8 @@ public class UserController {
     @Autowired
     UserTaskProgressService userTaskProgressService;
 
+    private static Logger logger = LoggerFactory.getLogger(UserController.class);
+
     /**
      *Purpose
      *FE needs this to:
@@ -58,37 +62,14 @@ public class UserController {
     public ResponseEntity<UserProfileResponseDTO> getUsersInfo(
             Authentication authentication
     ) {
+        if(authentication == null) {
+            logger.info("No auth object /me");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         String email = authentication.getName(); // comes from JWT
-        AppUser appUser = userService.getUserByEmail(email);
-
-        // prepare UserExamResponseDTO
-        List<UserExamResponseDTO> userExamResponseDTOList = new ArrayList<>();
-        UserExamStats userExamStats = userExamStatsService.getUserExamStats(appUser.getId());
-        Exam exam = examService.getExamByExamId(userExamStats.getExam().getExamId());
-        ArrayList<Integer> currentStreakList = taskService.getUpdateStreak(appUser.getId());
-        // first: currentStreak, second: updatedStreak
-        UserExamResponseDTO userExamResponseDTO = UserExamResponseDTO.builder()
-                .examId(exam.getExamId())
-                .examCode(exam.getExamCode())
-                .attemptType(userExamStats.getAttemptType())
-                .currentStreak(currentStreakList.get(0))
-                .longestStreak(currentStreakList.get(1))
-                .build();
-        userExamResponseDTOList.add(userExamResponseDTO);
-
-        UserProfileResponseDTO response = UserProfileResponseDTO.builder()
-                .userId(appUser.getId())
-                .userName(appUser.getUsername())
-                .userEmail(appUser.getEmail())
-                .phoneNumber(appUser.getPhoneNumber())
-                .workingStatus(appUser.getWorkingStatus())
-                .bachelorDegree(appUser.getBachelorDegree())
-                .timeZone(appUser.getTimeZone())
-                .role(appUser.getRole())
-                .exams(userExamResponseDTOList)
-                .build();
-
-        return ResponseEntity.ok(response);
+        UserProfileResponseDTO userProfileResponseDTO =
+                userService.prepareUserProfileResponseDTO(email, new UserProfileRequestDTO());
+        return ResponseEntity.ok(userProfileResponseDTO);
     }
 
     /**
@@ -100,7 +81,7 @@ public class UserController {
      * @return
      */
     @PutMapping("/me")
-    public ResponseEntity<?> updateUserProfile(@RequestBody UserProfileRequestDTO userProfileRequestDTO,
+    public ResponseEntity<UserProfileResponseDTO> updateUserProfile(@RequestBody UserProfileRequestDTO userProfileRequestDTO,
                                                Authentication authentication) {
         String email = null;
         try {
@@ -108,14 +89,28 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+        // Error handling for All these 4 params:
+        if(!validatePhoneNumber(userProfileRequestDTO.getPhoneNumber())) {
+            throw new PhoneNumberValidationException("Please provide correct phone number");
+        }
         if(validatePhoneNumber(userProfileRequestDTO.getPhoneNumber())) {
             AppUser appUser = userService.getUserByEmail(email);
             appUser.setPhoneNumber(userProfileRequestDTO.getPhoneNumber() != null ? userProfileRequestDTO.getPhoneNumber() : appUser.getPhoneNumber());
-            appUser.setWorkingStatus(userProfileRequestDTO.getWorkingStatus() != null ? userProfileRequestDTO.getWorkingStatus() : appUser.getWorkingStatus());
-            appUser.setBachelorDegree(userProfileRequestDTO.getBachelorDegree() != null ? userProfileRequestDTO.getBachelorDegree() : appUser.getBachelorDegree());
+            try {
+                appUser.setWorkingStatus(userProfileRequestDTO.getWorkingStatus() != null ? userProfileRequestDTO.getWorkingStatus() : appUser.getWorkingStatus());
+            } catch (Exception e) {
+                throw new WorkingStatusException("Given working status not supported. please choose from them " + WORKING_STATUS.values());
+            }
+            try {
+                appUser.setBachelorDegree(userProfileRequestDTO.getBachelorDegree() != null ? userProfileRequestDTO.getBachelorDegree() : appUser.getBachelorDegree());
+            } catch (Exception e) {
+                throw new BachelorDegreeException("Given Bachelor Degree not supported. please choose from them " + BACHELOR_DEGREE.values());
+            }
             appUser.setTimeZone(userProfileRequestDTO.getTimeZone() != null ? userProfileRequestDTO.getTimeZone() : appUser.getTimeZone());
             userService.saveUser(appUser);
-            return ResponseEntity.ok("Profile updated successfully for user: " + email);
+            UserProfileResponseDTO userProfileResponseDTO =
+                    userService.prepareUserProfileResponseDTO(email, new UserProfileRequestDTO());
+            return ResponseEntity.ok(userProfileResponseDTO);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -131,7 +126,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/me/exams")
-    public ResponseEntity<?> examPreparingFor(@RequestBody ExamRequestDto examRequestDto,
+    public ResponseEntity<UserProfileResponseDTO> examPreparingFor(@RequestBody ExamRequestDto examRequestDto,
                                               Authentication authentication) {
         String email = authentication.getName();
         if (email == null) {
@@ -168,7 +163,9 @@ public class UserController {
                 .totalTasksCompleted(0)
                 .build();
         userExamStatsService.save(userExamStats);
-        return ResponseEntity.ok("Exam added successfully");
+        UserProfileResponseDTO userProfileResponseDTO =
+                userService.prepareUserProfileResponseDTO(email, new UserProfileRequestDTO());
+        return ResponseEntity.ok(userProfileResponseDTO);
     }
 
 
@@ -202,20 +199,16 @@ public class UserController {
             throw new TaskProgressAlreadyPresent("Task is already present");
         }
         // create task progress record
-        try {
-            UserTaskProgress userTaskProgress = UserTaskProgress.builder()
-                    .user(appUser)
-                    .task(taskService.findById(createTaskProgressDTO.getTaskId()))
-                    .completed(true)
-                    .completedAt(LocalDate.now())
-                    .build();
-            userTaskProgressService.save(userTaskProgress);
-            taskService.updateStreakLogic(appUser.getId());
-            CreateTaskProgressResponseDTO createTaskProgressResponseDTO =
-                    userService.prepareResponseForCreateTaskProgress(appUser.getId(), createTaskProgressDTO.getTaskId());
-            return ResponseEntity.ok(createTaskProgressResponseDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        UserTaskProgress userTaskProgress = UserTaskProgress.builder()
+                .user(appUser)
+                .task(taskService.findById(createTaskProgressDTO.getTaskId()))
+                .completed(true)
+                .completedAt(LocalDate.now())
+                .build();
+        userTaskProgressService.save(userTaskProgress);
+        taskService.updateStreakLogic(appUser.getId());
+        CreateTaskProgressResponseDTO createTaskProgressResponseDTO =
+                userService.prepareResponseForCreateTaskProgress(appUser.getId(), createTaskProgressDTO.getTaskId());
+        return ResponseEntity.ok(createTaskProgressResponseDTO);
     }
 }

@@ -3,6 +3,7 @@ package com.example.examTracker.service;
 
 import com.example.examTracker.entity.Task;
 import com.example.examTracker.entity.UserTaskProgress;
+import com.example.examTracker.exceptions.TaskNotFoundException;
 import com.example.examTracker.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,8 @@ public class TaskService {
     }
 
     public Task findById(String taskId) {
-        return taskRepository.findById(taskId).get();
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
     }
 
     /**
@@ -93,11 +95,15 @@ public class TaskService {
      * @param userId
      */
     public ArrayList<Integer> getUpdateStreak(String userId) {
+        ArrayList<Integer> resList = new ArrayList<>();
+        if (userExamStatsService.getUserExamStats(userId) == null) {
+            return resList;
+        }
         // Get examId from userId
         String examId = userExamStatsService.getUserExamStats(userId).getExam().getExamId();
         // Get all tasks for the examId
         List<Task> allTasks = taskRepository.findAllTasksByExamId(examId);
-        ArrayList<Integer> resList = new ArrayList<>();
+
         if(isCompletedAllTasks(userId, allTasks, LocalDate.now().minusDays(1))) {
             resList.add(userExamStatsService.getCurrentStreakForUser(userId, examId));
             resList.add(userExamStatsService.getLongestStreakForUser(userId, examId));

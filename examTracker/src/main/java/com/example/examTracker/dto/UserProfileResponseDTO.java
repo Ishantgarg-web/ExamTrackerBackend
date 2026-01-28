@@ -24,8 +24,6 @@ public class UserProfileResponseDTO {
     private String phoneNumber;
     private WORKING_STATUS workingStatus;
     private BACHELOR_DEGREE bachelorDegree;
-    private String timeZone;
-    private USERS_ROLE role;
     private List<UserExamResponseDTO> exams;
 
 }

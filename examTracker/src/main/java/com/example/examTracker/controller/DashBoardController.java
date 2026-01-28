@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/api")
 public class DashBoardController {
 
     @Autowired
@@ -48,7 +48,7 @@ public class DashBoardController {
      * if isEditable = false: for that task, Button should disabled.
      * if isEditable = true: Button is enabled.
      */
-    @GetMapping("/me")
+    @GetMapping("/dashboard")
     public ResponseEntity<DashboardResponseDTO> getDashboard(Authentication authentication) {
         String email = authentication.getName();
         AppUser appUser = userService.getUserByEmail(email);

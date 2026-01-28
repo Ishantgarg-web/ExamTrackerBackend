@@ -2,6 +2,7 @@ package com.example.examTracker.controller;
 
 import com.example.examTracker.entity.AppUser;
 import com.example.examTracker.enums.USERS_ROLE;
+import com.example.examTracker.exceptions.OAuthException;
 import com.example.examTracker.service.JwtUtil;
 import com.example.examTracker.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -79,11 +80,9 @@ public class GoogleAuthController {
                 String email = (String) userInfo.get("email");
 
                 // Check user present in database or not with given email
-                UserDetails userDetails = null;
-                try {
-                    userDetails = userService.loadUserByUsername(email);
-                    // user is present in database
-                } catch (Exception e) {
+                UserDetails userDetails = userService.loadUserByUsername(email);
+                logger.info("Google auth userDetails {}", userDetails);
+                if (userDetails == null) {
                     // it means user is not present in database
                     // create user in database
                     AppUser user = new AppUser();
@@ -96,7 +95,6 @@ public class GoogleAuthController {
                 }
                 userDetails = userService.loadUserByUsername(email);
                 // send jwt token in response to FE
-
                 String jwt = jwtUtil.generateToken(userDetails);
 
                 boolean isProd = false; // or read from profile/env
@@ -114,10 +112,13 @@ public class GoogleAuthController {
                 return null;
 //                return ResponseEntity.ok("Login successful for user "+ email);
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new OAuthException("Google OAuth authentication failed");
+        } catch (com.example.examTracker.exceptions.ApiException e) {
+            // Re-throw API exceptions to be handled by global handler
+            throw e;
         } catch (Exception e) {
-            logger.info("Error message for Google Auth Controller: "+e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Error in Google Auth Controller: {}", e.getMessage(), e);
+            throw new OAuthException("Google OAuth authentication error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

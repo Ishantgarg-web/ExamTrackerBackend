@@ -3,5 +3,9 @@ package com.example.examTracker.enums;
 public enum BACHELOR_DEGREE {
     BTECH,
     BCA,
-    MCA
+    BE,
+    BCOM,
+    BA,
+    BSC,
+    OTHER
 }

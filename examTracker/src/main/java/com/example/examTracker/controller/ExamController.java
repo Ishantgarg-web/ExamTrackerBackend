@@ -2,11 +2,11 @@ package com.example.examTracker.controller;
 
 import com.example.examTracker.dto.CreateExamRequestDTO;
 import com.example.examTracker.entity.Exam;
+import com.example.examTracker.exceptions.ExamAlreadyExistsException;
 import com.example.examTracker.service.ExamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,22 +21,19 @@ public class ExamController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createExam(@RequestBody CreateExamRequestDTO createExamRequestDTO) {
-        try {
-            examService.getExamByExamCode(createExamRequestDTO.getExamCode());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (Exception e) {
-            // create Exam, it is not present in database
-            try {
-                Exam exam = Exam.builder()
-                        .examCode(createExamRequestDTO.getExamCode())
-                        .examName(createExamRequestDTO.getExamName())
-                        .build();
-                examService.saveExam(exam);
-                return ResponseEntity.status(HttpStatus.OK).build();
-            } catch (Exception ex) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
+        // Check if exam already exists
+        if (examService.existsByExamCode(createExamRequestDTO.getExamCode())) {
+            throw new ExamAlreadyExistsException("Exam with code " + createExamRequestDTO.getExamCode() + " already exists");
         }
+        
+        // Exam doesn't exist, create it
+        Exam exam = Exam.builder()
+                .examCode(createExamRequestDTO.getExamCode())
+                .examName(createExamRequestDTO.getExamName())
+                .build();
+        examService.saveExam(exam);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Exam created successfully with code: " + createExamRequestDTO.getExamCode());
     }
 
 }

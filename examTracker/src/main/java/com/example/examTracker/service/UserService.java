@@ -94,14 +94,17 @@ public class UserService implements UserDetailsService {
         if (currentStreak == null) currentStreak = 0;
         if (longestStreak == null) longestStreak = 0;
 
-        UserExamResponseDTO userExamResponseDTO = UserExamResponseDTO.builder()
-                .examId(exam == null ? null : exam.getExamId())
-                .examCode(exam == null ? null : exam.getExamCode())
-                .attemptType(userExamStats != null ? userExamStats.getAttemptType() : null)
-                .currentStreak(currentStreak)
-                .longestStreak(longestStreak)
-                .build();
-        userExamResponseDTOList.add(userExamResponseDTO);
+        // Only add exam to response when user has actually selected an exam
+        if (userExamStats != null && exam != null) {
+            UserExamResponseDTO userExamResponseDTO = UserExamResponseDTO.builder()
+                    .examId(exam.getExamId())
+                    .examCode(exam.getExamCode())
+                    .attemptType(userExamStats.getAttemptType())
+                    .currentStreak(currentStreak)
+                    .longestStreak(longestStreak)
+                    .build();
+            userExamResponseDTOList.add(userExamResponseDTO);
+        }
 
         UserProfileResponseDTO response = UserProfileResponseDTO.builder()
                 .userId(appUser.getId())

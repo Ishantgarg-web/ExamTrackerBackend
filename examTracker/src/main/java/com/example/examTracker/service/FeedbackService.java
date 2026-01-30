@@ -4,6 +4,7 @@ import com.example.examTracker.dto.feedback.CreateFeedbackRequestDTO;
 import com.example.examTracker.dto.feedback.CreateFeedbackResponseDTO;
 import com.example.examTracker.entity.AppUser;
 import com.example.examTracker.entity.Feedback;
+import com.example.examTracker.enums.FEEDBACK_STATUS;
 import com.example.examTracker.repository.FeedbackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class FeedbackService {
                 .subject(createFeedbackRequestDTO.getSubject())
                 .message(createFeedbackRequestDTO.getMessage())
                 .user(userService.getUserByEmail(email))
+                .feedbackStatus(FEEDBACK_STATUS.NEW)
                 .build();
         feedbackRepository.save(feedback);
         return CreateFeedbackResponseDTO.builder()

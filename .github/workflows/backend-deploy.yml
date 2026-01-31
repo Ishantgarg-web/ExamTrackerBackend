@@ -19,6 +19,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build JAR
+        working-directory: examTracker
         run: mvn clean package -DskipTests
 
       - name: Trigger Render Deploy

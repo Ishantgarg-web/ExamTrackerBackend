@@ -1,0 +1,21 @@
+spring:
+  google:
+    oauth:
+      client_id: ${CLIENT_ID_PROD}
+      client_secret: ${CLIENT_SECRET_PROD}
+  datasource:
+    url: ${DB_URL_PROD}?createDatabaseIfNotExist=true
+    username: ${MYSQL_USERNAME_PROD}
+    password: ${MYSQL_PASSWORD_PROD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  auth:
+    access:
+      token:
+        cookie:
+          name: ${SPRING_AUTH_ACCESS_TOKEN_COOKIE_NAME_PROD}
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+jwt:
+  secret: ${JWT_SECRET_PROD}

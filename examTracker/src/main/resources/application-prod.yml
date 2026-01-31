@@ -15,7 +15,7 @@ spring:
       token:
         cookie:
           name: ${SPRING_AUTH_ACCESS_TOKEN_COOKIE_NAME}
-
+  domain_name: ${SPRING_DOMAIN_NAME}
   jpa:
     show-sql: false
     hibernate:

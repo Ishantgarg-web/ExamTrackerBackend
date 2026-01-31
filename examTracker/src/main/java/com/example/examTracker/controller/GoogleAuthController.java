@@ -36,6 +36,9 @@ public class GoogleAuthController {
     @Value("${spring.google.oauth.client_secret}")
     private String client_secret;
 
+    @Value("${spring.domain_name}")
+    private String domain_name;
+
     @Autowired
     RestTemplate restTemplate;
 
@@ -60,7 +63,7 @@ public class GoogleAuthController {
             params.add("code", code);
             params.add("client_id", client_id);
             params.add("client_secret", client_secret);
-            params.add("redirect_uri", "http://localhost:8000/auth/google/callback");
+            params.add("redirect_uri", domain_name+"/auth/google/callback");
             params.add("grant_type", "authorization_code");
 
             HttpHeaders headers = new HttpHeaders();

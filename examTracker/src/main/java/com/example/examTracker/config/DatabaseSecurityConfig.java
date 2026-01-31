@@ -3,6 +3,7 @@ package com.example.examTracker.config;
 import com.example.examTracker.enums.USERS_ROLE;
 import com.example.examTracker.filter.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -37,6 +38,9 @@ public class DatabaseSecurityConfig {
 
     @Autowired
     AppConfig appConfig;
+
+    @Value("${spring.domain_name}")
+    private String domain_name;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -88,7 +92,7 @@ public class DatabaseSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Allow requests from frontend origin
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of(domain_name));
         
         // Allow common HTTP methods
         configuration.setAllowedMethods(Arrays.asList(

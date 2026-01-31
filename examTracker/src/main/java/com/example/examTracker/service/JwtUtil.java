@@ -20,6 +20,9 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Value("${spring.auth.access.token.cookie.name}")
+    private String accessTokenCookieName;
+
     // 30 minutes (access token)
     private static final long EXPIRATION_TIME = 300 * 24 * 60 * 60 * 1000;
 
@@ -65,7 +68,7 @@ public class JwtUtil {
         if (request.getCookies() == null) return null;
 
         for (Cookie cookie : request.getCookies()) {
-            if ("access_token".equals(cookie.getName())) {
+            if (accessTokenCookieName.equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }

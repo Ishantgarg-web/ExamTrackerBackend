@@ -8,7 +8,11 @@ spring:
     username: ${MYSQL_USERNAME}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+  auth:
+    access:
+      token:
+        cookie:
+          name: ${SPRING_AUTH_ACCESS_TOKEN_COOKIE_NAME}
   jpa:
     show-sql: true
     hibernate:

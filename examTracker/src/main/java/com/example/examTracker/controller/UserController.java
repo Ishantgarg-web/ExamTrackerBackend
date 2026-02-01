@@ -66,6 +66,7 @@ public class UserController {
             logger.info("No auth object /me");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+        logger.info("API: users/me hit: {}", authentication.getName());
         String email = authentication.getName(); // comes from JWT
         UserProfileResponseDTO userProfileResponseDTO =
                 userService.prepareUserProfileResponseDTO(email, new UserProfileRequestDTO());

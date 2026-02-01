@@ -36,6 +36,12 @@ public class GoogleAuthController {
     @Value("${spring.google.oauth.client_secret}")
     private String client_secret;
 
+    @Value("${spring.google.oauth.redirect_uri}")
+    private String google_oauth_redirect_uri;
+
+    @Value("${spring.google.oauth.response_cookie}")
+    private boolean google_oauth_response_cookie;
+
     @Value("${spring.domain_name}")
     private String domain_name;
 
@@ -63,7 +69,8 @@ public class GoogleAuthController {
             params.add("code", code);
             params.add("client_id", client_id);
             params.add("client_secret", client_secret);
-            params.add("redirect_uri", domain_name+"/auth/google/callback");
+//            params.add("redirect_uri", domain_name+"/auth/google/callback");
+            params.add("redirect_uri", google_oauth_redirect_uri);
             params.add("grant_type", "authorization_code");
 
             HttpHeaders headers = new HttpHeaders();
@@ -100,7 +107,7 @@ public class GoogleAuthController {
                 // send jwt token in response to FE
                 String jwt = jwtUtil.generateToken(userDetails);
 
-                boolean isProd = false; // or read from profile/env
+                boolean isProd = google_oauth_response_cookie; // or read from profile/env
 
                 ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                         .httpOnly(true)
@@ -111,7 +118,8 @@ public class GoogleAuthController {
                         .build();
 
                 httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-                httpResponse.sendRedirect("http://localhost:3000/onboarding");
+                httpResponse.sendRedirect(domain_name+"/onboarding");
+                logger.info("Google oauth controller reached end...");
                 return null;
 //                return ResponseEntity.ok("Login successful for user "+ email);
             }

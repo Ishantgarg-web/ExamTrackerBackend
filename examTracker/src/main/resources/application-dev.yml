@@ -3,6 +3,8 @@ spring:
     oauth:
       client_id: ${CLIENT_ID}
       client_secret: ${CLIENT_SECRET}
+      redirect_uri: ${SPRING_GOOGLE_OAUTH_REDIRECT_URI}
+      response_cookie: ${SPRING_GOOGLE_OAUTH_RESPONSE_COOKIE}
   datasource:
     url: jdbc:mysql://localhost:3306/${DATABASE_NAME}?createDatabaseIfNotExist=true
     username: ${MYSQL_USERNAME}
@@ -13,7 +15,7 @@ spring:
       token:
         cookie:
           name: ${SPRING_AUTH_ACCESS_TOKEN_COOKIE_NAME}
-  domain_name: http://localhost:8000
+  domain_name: ${SPRING_CORS_FRONT_END_DOMAIN_NAME}
   jpa:
     show-sql: true
     hibernate:

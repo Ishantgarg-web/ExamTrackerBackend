@@ -3,13 +3,13 @@ spring:
     oauth:
       client_id: ${CLIENT_ID}
       client_secret: ${CLIENT_SECRET}
-
+      redirect_uri: ${SPRING_GOOGLE_OAUTH_REDIRECT_URI}
+      response_cookie: ${SPRING_GOOGLE_OAUTH_RESPONSE_COOKIE}
   datasource:
     url: ${DB_URL}
     username: ${MYSQL_USERNAME}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   auth:
     access:
       token:

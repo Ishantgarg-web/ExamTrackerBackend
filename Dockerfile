@@ -2,14 +2,18 @@
 FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy only pom.xml first (better Docker cache)
+# Copy pom.xml first for caching
 COPY examTracker/pom.xml ./pom.xml
+COPY examTracker/.mvn ./.mvn
+COPY examTracker/mvnw ./mvnw
+
+# Download dependencies
 RUN mvn -B -q dependency:go-offline
 
-# Copy source
+# Copy source code
 COPY examTracker/src ./src
 
-# Build the jar
+# Build jar
 RUN mvn clean package -DskipTests
 
 # ---- Run stage ----

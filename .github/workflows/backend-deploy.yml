@@ -1,11 +1,12 @@
-name: Backend CI/CD
+name: Backend CI
 
 on:
   push:
     branches: [ "main" ]
+  pull_request:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,6 +22,3 @@ jobs:
       - name: Build JAR
         working-directory: examTracker
         run: mvn clean package -DskipTests
-
-      - name: Trigger Render Deploy
-        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}

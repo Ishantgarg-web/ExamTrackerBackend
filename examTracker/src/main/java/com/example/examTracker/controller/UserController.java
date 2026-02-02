@@ -107,6 +107,7 @@ public class UserController {
             } catch (Exception e) {
                 throw new BachelorDegreeException("Given Bachelor Degree not supported. please choose from them " + BACHELOR_DEGREE.values());
             }
+            appUser.setUsername(userProfileRequestDTO.getUserName());
             appUser.setTimeZone(userProfileRequestDTO.getTimeZone() != null ? userProfileRequestDTO.getTimeZone() : appUser.getTimeZone());
             userService.saveUser(appUser);
             UserProfileResponseDTO userProfileResponseDTO =

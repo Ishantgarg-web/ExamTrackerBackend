@@ -21,7 +21,7 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8000
 
 # All configs come from ENV
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -88,7 +88,7 @@ public class GoogleAuthController {
             if(userInfoResponse.getStatusCode() == HttpStatus.OK) {
                 Map<String, Object> userInfo = userInfoResponse.getBody();
                 String email = (String) userInfo.get("email");
-
+                logger.info("userinfo is {}", userInfo);
                 // Check user present in database or not with given email
                 UserDetails userDetails = userService.loadUserByUsername(email);
                 logger.info("Google auth userDetails {}", userDetails);
@@ -96,7 +96,7 @@ public class GoogleAuthController {
                     // it means user is not present in database
                     // create user in database
                     AppUser user = new AppUser();
-                    user.setUsername(email);
+                    user.setUsername((String) userInfo.get("name"));
                     user.setEmail(email);
                     user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
                     user.setRole(USERS_ROLE.USER);

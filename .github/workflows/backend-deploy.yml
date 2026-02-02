@@ -32,20 +32,32 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/exam-tracker:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/exam-tracker:${{ github.sha }}
 
-      - name: Deploy to EC2
+      - name: Deploy to EC2 (ubuntu login, root execution)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/exam-tracker:latest
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/exam-tracker:latest
 
-            docker stop exam-tracker || true
-            docker rm exam-tracker || true
+            sudo docker stop exam-tracker || true
+            sudo docker rm exam-tracker || true
 
-            docker run -d \
+            sudo docker run -d \
               --name exam-tracker \
-              -p 8000:8000 \
               --restart always \
+              -p 8000:8000 \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -e CLIENT_ID='${{ secrets.CLIENT_ID }}' \
+              -e CLIENT_SECRET='${{ secrets.CLIENT_SECRET }}' \
+              -e SPRING_GOOGLE_OAUTH_REDIRECT_URI='${{ secrets.SPRING_GOOGLE_OAUTH_REDIRECT_URI }}' \
+              -e SPRING_GOOGLE_OAUTH_RESPONSE_COOKIE='${{ secrets.SPRING_GOOGLE_OAUTH_RESPONSE_COOKIE }}' \
+              -e DB_URL='${{ secrets.DB_URL }}' \
+              -e MYSQL_USERNAME='${{ secrets.MYSQL_USERNAME }}' \
+              -e MYSQL_PASSWORD='${{ secrets.MYSQL_PASSWORD }}' \
+              -e SPRING_AUTH_ACCESS_TOKEN_COOKIE_NAME='${{ secrets.SPRING_AUTH_ACCESS_TOKEN_COOKIE_NAME }}' \
+              -e SPRING_DOMAIN_NAME='${{ secrets.SPRING_DOMAIN_NAME }}' \
+              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              -e PORT='${{ secrets.PORT }}' \
               ${{ secrets.DOCKERHUB_USERNAME }}/exam-tracker:latest

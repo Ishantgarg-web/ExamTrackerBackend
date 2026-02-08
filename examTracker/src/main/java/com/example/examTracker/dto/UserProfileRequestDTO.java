@@ -11,6 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProfileRequestDTO {
+    private String userName;
     private String phoneNumber;
     private WORKING_STATUS workingStatus;
     private BACHELOR_DEGREE bachelorDegree;
